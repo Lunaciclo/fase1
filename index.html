@@ -1914,7 +1914,7 @@
         <div class="footer-links">
           <h4>Contato</h4>
           <ul>
-            <li><a href="mailto:oi@luna.app.br">oi@luna.app.br</a></li>
+            <li><a href="/cdn-cgi/l/email-protection#f6999fb69a839897d8978686d89484"><span class="__cf_email__" data-cfemail="731c1a331f061d125d1203035d1101">[email&#160;protected]</span></a></li>
             <li><a href="#">Instagram</a></li>
             <li><a href="#">TikTok</a></li>
           </ul>
@@ -1931,12 +1931,15 @@
     </div>
   </footer>
 
-  <script>
-    // Signup handler
-    function handleSignup(source) {
+  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+    // Supabase config
+    const SUPABASE_URL = 'https://ykdemhozdfwayhicmtcw.supabase.co'
+    const SUPABASE_KEY = 'sb_publishable_kn8lc7CMsHxVzfOKLeW7GQ_uSRmBeGV'
+
+    async function handleSignup(source) {
       const emailId = source === 'hero' ? 'hero-email' : 'final-email'
       const successId = source === 'hero' ? 'hero-success' : 'final-success'
-      const email = document.getElementById(emailId).value
+      const email = document.getElementById(emailId).value.trim()
 
       if (!email || !email.includes('@')) {
         document.getElementById(emailId).focus()
@@ -1945,8 +1948,23 @@
         return
       }
 
-      // TODO: integrar com Supabase
-      // await supabase.from('waitlist').insert({ email, source, created_at: new Date() })
+      // Salva no Supabase
+      try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/waitlist`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${SUPABASE_KEY}`,
+            'Prefer': 'return=minimal'
+          },
+          body: JSON.stringify({ email, source })
+        })
+        // 409 = email duplicado, tudo bem
+        if (!res.ok && res.status !== 409) throw new Error('Erro')
+      } catch (e) {
+        console.error(e)
+      }
 
       document.getElementById(emailId).style.display = 'none'
       if (source === 'hero') {
@@ -1958,7 +1976,7 @@
       const success = document.getElementById(successId)
       success.style.display = 'block'
 
-      // Update counter (fake but convincing)
+      // Incrementa contador
       const counter = document.querySelector('.hero-social-proof span:last-child')
       if (counter) {
         const current = parseInt(counter.textContent.match(/\d+/)[0])
@@ -1990,12 +2008,4 @@
     document.querySelectorAll('.fade-up').forEach(el => observer.observe(el))
 
     // Enter key on inputs
-    document.getElementById('hero-email').addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') handleSignup('hero')
-    })
-    document.getElementById('final-email').addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') handleSignup('final')
-    })
-  </script>
-</body>
-</html>
+    document.getElementById('hero-email').addEventListener('keypress',
